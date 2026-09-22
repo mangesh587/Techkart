@@ -9,7 +9,7 @@ function ProductDetails() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`http://localhost:5000/api/products/${id}`)
+    fetch(`https://techkart-backend1.onrender.com/api/products/${id}`)
       .then((response) => response.json())
       .then((data) => {
         setProduct(data);
