@@ -135,7 +135,7 @@ function AdminDashboard() {
 
       if (editingProduct) {
         response = await fetch(
-          'https://techkart-backend1.onrender.com/api/products/${editingProduct._id}`,
+        `https://techkart-backend1.onrender.com/api/products/${editingProduct._id}`,
           {
             method: "PUT",
             headers: {
