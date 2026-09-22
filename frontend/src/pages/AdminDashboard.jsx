@@ -135,7 +135,7 @@ function AdminDashboard() {
 
       if (editingProduct) {
         response = await fetch(
-          `http://localhost:5000/api/products/${editingProduct._id}`,
+          'https://techkart-backend1.onrender.com/api/products/${editingProduct._id}`,
           {
             method: "PUT",
             headers: {
@@ -146,7 +146,7 @@ function AdminDashboard() {
         );
       } else {
         response = await fetch(
-          "http://localhost:5000/api/products",
+          "https://techkart-backend1.onrender.com/api/products",
           {
             method: "POST",
             headers: {
@@ -215,7 +215,7 @@ function AdminDashboard() {
 
     try {
       const response = await fetch(
-        `http://localhost:5000/api/products/${id}`,
+        `https://techkart-backend1.onrender.com/api/products/${id}`,
         {
           method: "DELETE",
         }
@@ -241,7 +241,7 @@ function AdminDashboard() {
 const updateOrderStatus = async (orderId, status) => {
   try {
     const response = await fetch(
-      `http://localhost:5000/api/orders/${orderId}/status`,
+      `https://techkart-backend1.onrender.com/api/orders/${orderId}/status`,
       {
         method: "PUT",
         headers: {
@@ -289,7 +289,7 @@ const updateOrderStatus = async (orderId, status) => {
 
   try {
     const response = await fetch(
-      `http://localhost:5000/api/orders/${orderId}`,
+      `https://techkart-backend1.onrender.com/api/orders/${orderId}`,
       {
         method: "DELETE",
       }
