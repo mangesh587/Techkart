@@ -46,7 +46,7 @@ function AdminDashboard() {
   const fetchProducts = async () => {
     try {
       const response = await fetch(
-        "http://localhost:5000/api/products"
+        "https://techkart-backend1.onrender.com/api/products"
       );
 
       const data = await response.json();
@@ -67,7 +67,7 @@ function AdminDashboard() {
   const fetchOrders = async () => {
     try {
       const response = await fetch(
-        "http://localhost:5000/api/orders"
+        "https://techkart-backend1.onrender.com/api/orders"
       );
 
       const data = await response.json();
