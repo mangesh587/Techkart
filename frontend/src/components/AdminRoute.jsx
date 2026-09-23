@@ -29,37 +29,4 @@ const AdminRoute = ({ children }) => {
   return children;
 };
 
-export default AdminRoute;        <Route
-          path="/cart"
-          element={<Cart />}
-        />
-
-        <Route
-          path="/checkout"
-          element={<Checkout />}
-        />
-
-        <Route
-          path="/admin"
-          element={
-            <AdminRoute>
-              <AdminDashboard />
-            </AdminRoute>
-          }
-        />
-
-        <Route
-          path="/login"
-          element={<Login />}
-        />
-
-        <Route
-          path="/register"
-          element={<Register />}
-        />
-      </Routes>
-    </BrowserRouter>
-  );
-}
-
-export default App;
+export default AdminRoute;
