@@ -14,7 +14,7 @@ import Register from "./pages/Register";
 
 function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/Techkart">
       <Navbar />
 
      <Routes>
