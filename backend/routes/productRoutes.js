@@ -41,7 +41,11 @@ router.get("/:id", async (req, res) => {
 });
 
 // POST - Add new product
-router.post("/", async (req, res) => {
+router.post(
+  "/",
+  protect,
+  adminOnly,
+  async (req, res) => {
   try {
     const product = new Product(req.body);
 
@@ -57,7 +61,11 @@ router.post("/", async (req, res) => {
 });
 
 // PUT - Update product
-router.put("/:id", async (req, res) => {
+router.put(
+  "/:id",
+  protect,
+  adminOnly,
+  async (req, res) => {
   try {
     const updatedProduct = await Product.findByIdAndUpdate(
       req.params.id,
@@ -84,7 +92,11 @@ router.put("/:id", async (req, res) => {
 });
 
 // DELETE - Delete product
-router.delete("/:id", async (req, res) => {
+router.delete(
+  "/:id",
+  protect,
+  adminOnly,
+  async (req, res) => {
   try {
     const deletedProduct = await Product.findByIdAndDelete(
       req.params.id
