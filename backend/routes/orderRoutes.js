@@ -2,6 +2,11 @@ const express = require("express");
 const mongoose = require("mongoose");
 const Order = require("../models/Order");
 
+const {
+  protect,
+  adminOnly,
+} = require("../middleware/authMiddleware");
+
 const router = express.Router();
 
 // =========================
@@ -32,7 +37,11 @@ router.post("/", async (req, res) => {
 // GET ALL ORDERS
 // =========================
 
-router.get("/", async (req, res) => {
+router.get(
+  "/",
+  protect,
+  adminOnly,
+  async (req, res) => {
   try {
     const orders = await Order.find().sort({
       createdAt: -1,
@@ -53,7 +62,11 @@ router.get("/", async (req, res) => {
 // UPDATE ORDER STATUS
 // =========================
 
-router.put("/:id/status", async (req, res) => {
+router.put(
+  "/:id/status",
+  protect,
+  adminOnly,
+  async (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
@@ -118,7 +131,11 @@ router.put("/:id/status", async (req, res) => {
 // DELETE ORDER
 // =========================
 
-router.delete("/:id", async (req, res) => {
+router.delete(
+  "/:id",
+  protect,
+  adminOnly,
+  async (req, res) => {
   try {
     const { id } = req.params;
 
