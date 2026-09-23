@@ -1,40 +1,35 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 
-import "./App.css";
+const AdminRoute = ({ children }) => {
+  const token = localStorage.getItem("token");
 
-import Navbar from "./components/Navbar";
-import Home from "./pages/Home";
-import Products from "./pages/Products";
-import ProductDetails from "./pages/ProductDetails";
-import Cart from "./pages/Cart";
-import AdminDashboard from "./pages/AdminDashboard";
-import Checkout from "./pages/Checkout";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import AdminRoute from "./components/AdminRoute";
+  const storedUser = localStorage.getItem("user");
 
-function App() {
-  return (
-    <BrowserRouter basename="/Techkart">
-      <Navbar />
+  let user = null;
 
-      <Routes>
-        <Route
-          path="/"
-          element={<Home />}
-        />
+  try {
+    user = storedUser
+      ? JSON.parse(storedUser)
+      : null;
+  } catch (error) {
+    user = null;
+  }
 
-        <Route
-          path="/products"
-          element={<Products />}
-        />
+  // Not logged in
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
 
-        <Route
-          path="/product/:id"
-          element={<ProductDetails />}
-        />
+  // Logged in but not admin
+  if (!user || user.role !== "admin") {
+    return <Navigate to="/" replace />;
+  }
 
-        <Route
+  // Admin
+  return children;
+};
+
+export default AdminRoute;        <Route
           path="/cart"
           element={<Cart />}
         />
