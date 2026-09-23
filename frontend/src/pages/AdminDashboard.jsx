@@ -65,24 +65,32 @@ function AdminDashboard() {
   // =========================
 
   const fetchOrders = async () => {
-    try {
-      const response = await fetch(
-        "https://techkart-backend1.onrender.com/api/orders"
+  try {
+    const token = localStorage.getItem("token");
+
+    const response = await fetch(
+      "https://techkart-backend1.onrender.com/api/orders",
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(
+        data.message || "Failed to fetch orders"
       );
-
-      const data = await response.json();
-
-      setOrders(Array.isArray(data) ? data : []);
-    } catch (error) {
-      console.error("Failed to fetch orders:", error);
-      setOrders([]);
     }
-  };
 
-  useEffect(() => {
-    fetchProducts();
-    fetchOrders();
-  }, []);
+    setOrders(Array.isArray(data) ? data : []);
+  } catch (error) {
+    console.error("Failed to fetch orders:", error);
+    setOrders([]);
+  }
+};
 
   // =========================
   // FORM INPUT
@@ -240,12 +248,15 @@ function AdminDashboard() {
 
 const updateOrderStatus = async (orderId, status) => {
   try {
+    const token = localStorage.getItem("token");
+
     const response = await fetch(
       `https://techkart-backend1.onrender.com/api/orders/${orderId}/status`,
       {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           status: status,
@@ -288,10 +299,15 @@ const updateOrderStatus = async (orderId, status) => {
   }
 
   try {
+    const token = localStorage.getItem("token");
+
     const response = await fetch(
       `https://techkart-backend1.onrender.com/api/orders/${orderId}`,
       {
         method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       }
     );
 
@@ -316,7 +332,6 @@ const updateOrderStatus = async (orderId, status) => {
     );
   }
 };
-
   // =========================
   // LOADING
   // =========================
