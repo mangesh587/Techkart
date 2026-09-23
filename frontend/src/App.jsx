@@ -11,7 +11,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import Checkout from "./pages/Checkout";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-import AdminRoute from "./components/Adminroute";
+import AdminRoute from "./components/AdminRoute";
 
 function App() {
   return (
