@@ -1,32 +1,70 @@
-import { Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 
-const AdminRoute = ({ children }) => {
-  const token = localStorage.getItem("token");
+import "./App.css";
 
-  const storedUser = localStorage.getItem("user");
+import Navbar from "./components/Navbar";
+import Home from "./pages/Home";
+import Products from "./pages/Products";
+import ProductDetails from "./pages/ProductDetails";
+import Cart from "./pages/Cart";
+import AdminDashboard from "./pages/AdminDashboard";
+import Checkout from "./pages/Checkout";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import AdminRoute from "./components/AdminRoute";
 
-  let user = null;
+function App() {
+  return (
+    <BrowserRouter basename="/Techkart">
+      <Navbar />
 
-  try {
-    user = storedUser
-      ? JSON.parse(storedUser)
-      : null;
-  } catch (error) {
-    user = null;
-  }
+      <Routes>
+        <Route
+          path="/"
+          element={<Home />}
+        />
 
-  // Not logged in
-  if (!token) {
-    return <Navigate to="/login" replace />;
-  }
+        <Route
+          path="/products"
+          element={<Products />}
+        />
 
-  // Logged in but not admin
-  if (!user || user.role !== "admin") {
-    return <Navigate to="/" replace />;
-  }
+        <Route
+          path="/product/:id"
+          element={<ProductDetails />}
+        />
 
-  // Admin
-  return children;
-};
+        <Route
+          path="/cart"
+          element={<Cart />}
+        />
 
-export default AdminRoute;
+        <Route
+          path="/checkout"
+          element={<Checkout />}
+        />
+
+        <Route
+          path="/admin"
+          element={
+            <AdminRoute>
+              <AdminDashboard />
+            </AdminRoute>
+          }
+        />
+
+        <Route
+          path="/login"
+          element={<Login />}
+        />
+
+        <Route
+          path="/register"
+          element={<Register />}
+        />
+      </Routes>
+    </BrowserRouter>
+  );
+}
+
+export default App;
