@@ -67,29 +67,4 @@ function App() {
   );
 }
 
-export default App; 09
-  <Route
-    path="/checkout"
-    element={<Checkout />}
-  />
-
-  <Route
-    path="/admin"
-    element={<AdminDashboard />}
-  />
-
-  <Route
-    path="/login"
-    element={<Login />}
-  />
-
-  <Route
-    path="/register"
-    element={<Register />}
-  />
-</Routes>
-    </BrowserRouter>
-  );
-}
-
 export default App;
