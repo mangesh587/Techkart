@@ -1,0 +1,298 @@
+.my-orders-page {
+  min-height: 100vh;
+  background: #08111f;
+  color: white;
+  padding: 40px 20px;
+}
+
+.orders-container {
+  max-width: 1100px;
+  margin: auto;
+}
+
+.orders-header {
+  margin-bottom: 30px;
+}
+
+.orders-header h1 {
+  font-size: 32px;
+  margin-bottom: 8px;
+  color: white;
+}
+
+.orders-header p {
+  color: #aab4c3;
+  font-size: 15px;
+}
+
+.orders-loading {
+  min-height: 70vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 18px;
+}
+
+.orders-error {
+  background: #3a1515;
+  border: 1px solid #8f3030;
+  color: #ffb4b4;
+  padding: 15px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+
+.no-orders {
+  background: #101c2e;
+  border: 1px solid #24344b;
+  border-radius: 14px;
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.no-orders-icon {
+  font-size: 55px;
+  margin-bottom: 15px;
+}
+
+.no-orders h2 {
+  color: white;
+  margin-bottom: 8px;
+}
+
+.no-orders p {
+  color: #9da9b8;
+}
+
+.orders-list {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+.order-card {
+  background: #101c2e;
+  border: 1px solid #26364d;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.order-top {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr;
+  gap: 20px;
+  padding: 22px;
+  border-bottom: 1px solid #26364d;
+}
+
+.order-top > div {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.order-label {
+  color: #8f9bad;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.order-top strong {
+  color: white;
+  font-size: 14px;
+  word-break: break-all;
+}
+
+.status {
+  width: fit-content;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.status.pending {
+  background: #3b3217;
+  color: #ffd86b;
+}
+
+.status.processing {
+  background: #182e48;
+  color: #70b9ff;
+}
+
+.status.shipped {
+  background: #202552;
+  color: #9da8ff;
+}
+
+.status.delivered {
+  background: #153521;
+  color: #72e09a;
+}
+
+.status.cancelled {
+  background: #421d1d;
+  color: #ff8585;
+}
+
+.order-products {
+  padding: 22px;
+}
+
+.order-products h3 {
+  color: white;
+  margin-bottom: 18px;
+}
+
+.order-product {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 15px 0;
+  border-bottom: 1px solid #243247;
+}
+
+.order-product:last-child {
+  border-bottom: none;
+}
+
+.product-image {
+  width: 65px;
+  height: 65px;
+  border-radius: 10px;
+  background: #17263a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.product-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.product-image span {
+  font-size: 28px;
+}
+
+.product-info {
+  flex: 1;
+}
+
+.product-info h4 {
+  color: white;
+  margin-bottom: 6px;
+  font-size: 15px;
+}
+
+.product-info p {
+  color: #9da9b8;
+  font-size: 13px;
+  margin: 3px 0;
+}
+
+.product-total {
+  color: white;
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.order-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 22px;
+  border-top: 1px solid #26364d;
+  border-bottom: 1px solid #26364d;
+}
+
+.payment-info,
+.order-total {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.payment-info span,
+.order-total span {
+  color: #8f9bad;
+  font-size: 12px;
+}
+
+.payment-info strong {
+  color: white;
+  text-transform: capitalize;
+}
+
+.order-total {
+  text-align: right;
+}
+
+.order-total strong {
+  color: #55d6be;
+  font-size: 22px;
+}
+
+.customer-details {
+  padding: 22px;
+}
+
+.customer-details h3 {
+  color: white;
+  margin-bottom: 12px;
+}
+
+.customer-details p {
+  color: #aab4c3;
+  font-size: 14px;
+  margin: 5px 0;
+}
+
+.customer-details strong {
+  color: white;
+}
+
+
+/* =========================
+   MOBILE
+========================= */
+
+@media (max-width: 700px) {
+
+  .my-orders-page {
+    padding: 25px 12px;
+  }
+
+  .orders-header h1 {
+    font-size: 26px;
+  }
+
+  .order-top {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+
+  .order-product {
+    align-items: flex-start;
+  }
+
+  .product-total {
+    font-size: 14px;
+  }
+
+  .order-bottom {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 18px;
+  }
+
+  .order-total {
+    text-align: left;
+  }
+
+  }
