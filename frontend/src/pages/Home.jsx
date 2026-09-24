@@ -15,18 +15,34 @@ function Home() {
         return response.json();
       })
       .then((data) => {
-        setProducts(data);
+        setProducts(Array.isArray(data) ? data : []);
         setLoading(false);
       })
       .catch((error) => {
         console.error("Failed to fetch products:", error);
+        setProducts([]);
         setLoading(false);
       });
   }, []);
 
- const featuredProducts = [...products]
-  .sort((a, b) => b.rating - a.rating)
-  .slice(0, 3);
+  const featuredProducts = [...products]
+    .sort(
+      (a, b) =>
+        Number(b.rating || 0) - Number(a.rating || 0)
+    )
+    .slice(0, 3);
+
+  const isImageUrl = (image) => {
+    if (!image || typeof image !== "string") {
+      return false;
+    }
+
+    return (
+      image.startsWith("http://") ||
+      image.startsWith("https://") ||
+      image.startsWith("/")
+    );
+  };
 
   return (
     <div>
@@ -63,60 +79,66 @@ function Home() {
       {/* CATEGORY SECTION */}
 
       <section className="section">
-  <h2>Shop by Category</h2>
+        <h2>Shop by Category</h2>
 
-  <p className="section-subtitle">
-    Explore our popular electronics categories
-  </p>
+        <p className="section-subtitle">
+          Explore our popular electronics categories
+        </p>
 
-  <div className="category-container">
+        <div className="category-container">
+          <Link
+            to="/products?category=Smartphones"
+            className="category-card"
+          >
+            <div className="category-icon">
+              📱
+            </div>
 
-    <Link
-      to="/products?category=Smartphones"
-      className="category-card"
-    >
-      <div className="category-icon">📱</div>
+            <h3>Smartphones</h3>
 
-      <h3>Smartphones</h3>
+            <p>Latest mobile phones</p>
+          </Link>
 
-      <p>Latest mobile phones</p>
-    </Link>
+          <Link
+            to="/products?category=Laptops"
+            className="category-card"
+          >
+            <div className="category-icon">
+              💻
+            </div>
 
-    <Link
-      to="/products?category=Laptops"
-      className="category-card"
-    >
-      <div className="category-icon">💻</div>
+            <h3>Laptops</h3>
 
-      <h3>Laptops</h3>
+            <p>Powerful laptops</p>
+          </Link>
 
-      <p>Powerful laptops</p>
-    </Link>
+          <Link
+            to="/products?category=Audio"
+            className="category-card"
+          >
+            <div className="category-icon">
+              🎧
+            </div>
 
-    <Link
-      to="/products?category=Audio"
-      className="category-card"
-    >
-      <div className="category-icon">🎧</div>
+            <h3>Audio</h3>
 
-      <h3>Audio</h3>
+            <p>Headphones & earbuds</p>
+          </Link>
 
-      <p>Headphones & earbuds</p>
-    </Link>
+          <Link
+            to="/products?category=Smartwatches"
+            className="category-card"
+          >
+            <div className="category-icon">
+              ⌚
+            </div>
 
-    <Link
-      to="/products?category=Smartwatches"
-      className="category-card"
-    >
-      <div className="category-icon">⌚</div>
+            <h3>Smartwatches</h3>
 
-      <h3>Smartwatches</h3>
-
-      <p>Smart wearable tech</p>
-    </Link>
-
-  </div>
-</section>
+            <p>Smart wearable tech</p>
+          </Link>
+        </div>
+      </section>
 
       {/* FEATURED PRODUCTS */}
 
@@ -142,14 +164,22 @@ function Home() {
                 className="product-card"
                 key={product._id}
               >
+                {/* PRODUCT IMAGE */}
+
                 <div className="product-image">
-                  {product.image?.startsWith("http") ? (
+                  {isImageUrl(product.image) ? (
                     <img
                       src={product.image}
                       alt={product.name}
+                      onError={(event) => {
+                        event.currentTarget.style.display =
+                          "none";
+                      }}
                     />
                   ) : (
-                    product.image
+                    <span className="product-placeholder">
+                      {product.image || "📦"}
+                    </span>
                   )}
                 </div>
 
@@ -160,14 +190,14 @@ function Home() {
                 <h3>{product.name}</h3>
 
                 <p>
-                  ⭐ {product.rating}
+                  ⭐ {Number(product.rating || 0).toFixed(1)}
                 </p>
 
                 <h3>
                   ₹
-                  {product.price.toLocaleString(
-                    "en-IN"
-                  )}
+                  {Number(
+                    product.price || 0
+                  ).toLocaleString("en-IN")}
                 </h3>
 
                 <Link
