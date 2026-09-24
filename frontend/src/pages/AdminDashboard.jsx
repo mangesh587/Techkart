@@ -1249,45 +1249,46 @@ function AdminDashboard() {
 
                       <td>
 
-                        {Array.isArray(
-                          order.products
-                        )
-                          ? order.products.map(
-                              (
-                                product,
-                                index
-                              ) => (
+  {Array.isArray(order.products)
+    ? order.products.map(
+        (product, index) => (
 
-                                <div
-                                  key={
-                                    index
-                                  }
-                                  className="order-product"
-                                >
+          <div
+            key={index}
+            className="order-product"
+          >
 
-                                  <span>
-                                    {product.image ||
-                                      "📦"}
-                                  </span>
+            <span className="order-product-image">
 
-                                  <span>
-                                    {
-                                      product.name
-                                    }{" "}
-                                    ×{" "}
-                                    {
-                                      product.quantity
-                                    }
-                                  </span>
+              {product.image?.startsWith("http") ? (
 
-                                </div>
+                <img
+                  src={product.image}
+                  alt={product.name}
+                />
 
-                              )
-                            )
-                          : "No products"}
+              ) : (
 
-                      </td>
+                product.image || "📦"
 
+              )}
+
+            </span>
+
+            <span className="order-product-name">
+
+              {product.name} ×{" "}
+              {product.quantity}
+
+            </span>
+
+          </div>
+
+        )
+      )
+    : "No products"}
+
+</td>
                       {/* TOTAL */}
 
                       <td>
@@ -1321,44 +1322,35 @@ function AdminDashboard() {
                       <td>
 
                         <select
-                          value={
-                            order.status ||
-                            "Pending"
-                          }
-                          onChange={(
-                            event
-                          ) =>
-                            updateOrderStatus(
-                              order._id,
-                              event.target
-                                .value
-                            )
-                          }
-                          className="order-status-select"
-                        >
+  value={order.status || "Pending"}
+  onChange={(event) =>
+    updateOrderStatus(
+      order._id,
+      event.target.value
+    )
+  }
+  className="order-status-select"
+>
+  <option value="Pending">
+    Pending
+  </option>
 
-                          <option value="Pending">
-                            Pending
-                          </option>
+  <option value="Processing">
+    Processing
+  </option>
 
-                          <option value="Processing">
-                            Processing
-                          </option>
+  <option value="Shipped">
+    Shipped
+  </option>
 
-                          <option value="Shipped">
-                            Shipped
-                          </option>
+  <option value="Delivered">
+    Delivered
+  </option>
 
-                          <option value="Delivered">
-                            Delivered
-                          </option>
-
-                          <option value="Cancelled">
-                            Cancelled
-                          </option>
-
-                        </select>
-
+  <option value="Cancelled">
+    Cancelled
+  </option>
+</select>
                       </td>
 
                       {/* ACTIONS */}
