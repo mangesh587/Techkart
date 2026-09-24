@@ -5942,6 +5942,15 @@ textarea::placeholder {
   justify-content: center;
   align-items: center;
   min-height: 400px;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.hero-image::before,
+.hero-image::after {
+  display: none !important;
+  content: none !important;
 }
 
 .hero-image img {
@@ -5950,4 +5959,8 @@ textarea::placeholder {
   height: 400px;
   object-fit: contain;
   display: block;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
 }
