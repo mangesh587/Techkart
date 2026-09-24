@@ -107,18 +107,21 @@ function Navbar() {
       <div className="navbar-links">
 
         <Link to="/">
-          Home
+          Home 🏠 
         </Link>
 
         <Link to="/products">
           Products
         </Link>
 
+
+        {/* CART */}
+
         <Link
           to="/cart"
           className="cart-link"
         >
-          Cart
+          Cart 🛒 
 
           {cartCount > 0 && (
             <span className="cart-badge">
@@ -128,11 +131,20 @@ function Navbar() {
         </Link>
 
 
+        {/* MY ORDERS */}
+
+        {user && user.role !== "admin" && (
+          <Link to="/my-orders">
+            My Orders 🥡
+          </Link>
+        )}
+
+
         {/* ADMIN */}
 
         {user?.role === "admin" && (
           <Link to="/admin">
-            Admin
+            Admin Panel
           </Link>
         )}
 
@@ -150,7 +162,7 @@ function Navbar() {
               className="navbar-logout-btn"
               onClick={handleLogout}
             >
-              Logout
+              Logout 
             </button>
 
           </div>
