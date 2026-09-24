@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
@@ -10,6 +9,8 @@ function Checkout() {
   });
 
   const [paymentMethod, setPaymentMethod] = useState("cod");
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -39,67 +40,77 @@ function Checkout() {
     });
   };
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-  if (cart.length === 0) {
-    alert("Your cart is empty.");
-    navigate("/products");
-    return;
-  }
-
-  try {
-    const response = await fetch(
-      "https://techkart-backend1.onrender.com/api/orders",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          customer: formData,
-          products: cart,
-          paymentMethod: paymentMethod,
-          totalAmount: total,
-        }),
-      }
-    );
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(
-        data.message || "Failed to place order"
-      );
+    if (cart.length === 0) {
+      alert("Your cart is empty.");
+      navigate("/products");
+      return;
     }
 
-    console.log("Order saved:", data.order);
+    if (isSubmitting) {
+      return;
+    }
 
-    alert(
-      `Order placed successfully!\n\nThank you ${formData.name}.`
-    );
+    setIsSubmitting(true);
 
-    localStorage.removeItem("cart");
+    try {
+      const response = await fetch(
+        "https://techkart-backend1.onrender.com/api/orders",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            customer: formData,
+            products: cart,
+            paymentMethod: paymentMethod,
+            totalAmount: total,
+          }),
+        }
+      );
 
-    window.dispatchEvent(
-      new Event("cartUpdated")
-    );
+      const data = await response.json();
 
-    navigate("/products");
-  } catch (error) {
-    console.error("Order error:", error);
+      if (!response.ok) {
+        throw new Error(
+          data.message || "Failed to place order"
+        );
+      }
 
-    alert(
-      "Failed to place order.\nPlease try again."
-    );
-  }
-};
+      console.log("Order saved:", data.order);
+
+      alert(
+        `Order placed successfully!\n\nThank you ${formData.name}.`
+      );
+
+      localStorage.removeItem("cart");
+
+      window.dispatchEvent(
+        new Event("cartUpdated")
+      );
+
+      navigate("/products");
+    } catch (error) {
+      console.error("Order error:", error);
+
+      alert(
+        "Failed to place order.\nPlease try again."
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   if (cart.length === 0) {
     return (
       <div className="checkout-page">
         <div className="empty-cart">
-          <div className="empty-cart-icon">🛒</div>
+          <div className="empty-cart-icon">
+            🛒
+          </div>
 
           <h2>Your cart is empty</h2>
 
@@ -255,6 +266,7 @@ const handleSubmit = async (e) => {
 
             <div className="payment-options">
 
+              {/* COD */}
               <label
                 className={`payment-option ${
                   paymentMethod === "cod"
@@ -283,6 +295,7 @@ const handleSubmit = async (e) => {
 
               </label>
 
+              {/* UPI */}
               <label
                 className={`payment-option ${
                   paymentMethod === "upi"
@@ -311,6 +324,7 @@ const handleSubmit = async (e) => {
 
               </label>
 
+              {/* CARD */}
               <label
                 className={`payment-option ${
                   paymentMethod === "card"
@@ -356,8 +370,11 @@ const handleSubmit = async (e) => {
             <button
               type="submit"
               className="place-order-btn"
+              disabled={isSubmitting}
             >
-              Place Order
+              {isSubmitting
+                ? "Placing Order..."
+                : "Place Order"}
             </button>
 
           </div>
@@ -419,19 +436,27 @@ const handleSubmit = async (e) => {
           </div>
 
           <div className="checkout-summary-row">
+
             <span>Items</span>
-            <span>{totalItems}</span>
+
+            <span>
+              {totalItems}
+            </span>
+
           </div>
 
           <div className="checkout-summary-row">
+
             <span>Delivery</span>
 
             <span className="free-delivery">
               FREE
             </span>
+
           </div>
 
           <div className="checkout-summary-row">
+
             <span>Payment</span>
 
             <span>
@@ -441,6 +466,7 @@ const handleSubmit = async (e) => {
                 ? "UPI"
                 : "Card"}
             </span>
+
           </div>
 
           <div className="summary-divider"></div>
