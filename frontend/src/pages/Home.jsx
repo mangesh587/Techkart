@@ -71,9 +71,12 @@ function Home() {
           </Link>
         </div>
 
-        <div className="hero-image">
-          📱
-        </div>
+       <div className="hero-image">
+  <img
+    src="/images/hero-techkart.png"
+    alt="TechKart Electronics"
+  />
+</div>
       </section>
 
       {/* CATEGORY SECTION */}
