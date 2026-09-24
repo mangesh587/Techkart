@@ -5935,3 +5935,19 @@ textarea::placeholder {
   color: #111827 !important;
   font-size: 14px;
 }
+
+.hero-image {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+}
+
+.hero-image img {
+  width: 100%;
+  max-width: 520px;
+  height: 400px;
+  object-fit: contain;
+  display: block;
+}
