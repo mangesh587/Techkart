@@ -13,37 +13,11 @@ const router = express.Router();
 
 
 // =====================================================
-// CREATE ORDER
+// CREATE ORDER - CUSTOMER
 // =====================================================
 
-router.post("/", async (req, res) => {
-  try {
-    const order = new Order(req.body);
-
-    const savedOrder = await order.save();
-
-    res.status(201).json({
-      message: "Order created successfully",
-      order: savedOrder,
-    });
-
-  } catch (error) {
-    console.error("CREATE ORDER ERROR:", error);
-
-    res.status(400).json({
-      message: "Failed to create order",
-      error: error.message,
-    });
-  }
-});
-
-
-// =====================================================
-// GET MY ORDERS - CUSTOMER
-// =====================================================
-
-router.get(
-  "/my-orders",
+router.post(
+  "/",
   protect,
   async (req, res) => {
     try {
@@ -57,7 +31,7 @@ router.get(
         });
       }
 
-      // Find the actual user
+      // Find actual logged-in user
       const user = await User.findById(userId);
 
       if (!user) {
@@ -66,16 +40,177 @@ router.get(
         });
       }
 
-      // Find only this customer's orders
+      const {
+        customer,
+        products,
+        paymentMethod,
+        totalAmount,
+      } = req.body;
+
+
+      // Validate products
+      if (
+        !products ||
+        !Array.isArray(products) ||
+        products.length === 0
+      ) {
+        return res.status(400).json({
+          message: "Order must contain at least one product",
+        });
+      }
+
+
+      // Validate payment method
+      const allowedPaymentMethods = [
+        "cod",
+        "upi",
+        "card",
+      ];
+
+      if (
+        !allowedPaymentMethods.includes(
+          paymentMethod
+        )
+      ) {
+        return res.status(400).json({
+          message: "Invalid payment method",
+        });
+      }
+
+
+      // Validate total amount
+      if (
+        typeof totalAmount !== "number" ||
+        totalAmount <= 0
+      ) {
+        return res.status(400).json({
+          message: "Invalid order total",
+        });
+      }
+
+
+      /*
+       * IMPORTANT
+       *
+       * We use the logged-in user's email
+       * instead of trusting the email entered
+       * manually in the checkout form.
+       *
+       * This guarantees that My Orders can
+       * find the order later.
+       */
+
+      const customerData = {
+        ...customer,
+        email: user.email,
+      };
+
+
+      const order = new Order({
+        customer: customerData,
+        products: products,
+        paymentMethod: paymentMethod,
+        totalAmount: totalAmount,
+        status: "Pending",
+      });
+
+
+      const savedOrder = await order.save();
+
+
+      console.log(
+        "ORDER CREATED SUCCESSFULLY"
+      );
+
+      console.log(
+        "User:",
+        user.email
+      );
+
+      console.log(
+        "Order ID:",
+        savedOrder._id
+      );
+
+
+      res.status(201).json({
+        message: "Order created successfully",
+        order: savedOrder,
+      });
+
+    } catch (error) {
+
+      console.error(
+        "CREATE ORDER ERROR:",
+        error
+      );
+
+      res.status(400).json({
+        message: "Failed to create order",
+        error: error.message,
+      });
+    }
+  }
+);
+
+
+// =====================================================
+// GET MY ORDERS - CUSTOMER
+// =====================================================
+
+router.get(
+  "/my-orders",
+  protect,
+  async (req, res) => {
+    try {
+
+      const userId = req.user.id;
+
+      if (!userId) {
+        return res.status(401).json({
+          message: "User information not found",
+        });
+      }
+
+
+      // Find logged-in user
+      const user = await User.findById(userId);
+
+      if (!user) {
+        return res.status(404).json({
+          message: "User not found",
+        });
+      }
+
+
+      console.log(
+        "MY ORDERS REQUEST"
+      );
+
+      console.log(
+        "Logged-in user:",
+        user.email
+      );
+
+
+      // Find orders using logged-in user's email
       const orders = await Order.find({
         "customer.email": user.email,
       }).sort({
         createdAt: -1,
       });
 
+
+      console.log(
+        "Orders found:",
+        orders.length
+      );
+
+
       res.json(orders);
 
     } catch (error) {
+
       console.error(
         "GET MY ORDERS ERROR:",
         error
@@ -106,9 +241,11 @@ router.get(
           createdAt: -1,
         });
 
+
       res.json(orders);
 
     } catch (error) {
+
       console.error(
         "GET ORDERS ERROR:",
         error
@@ -137,12 +274,25 @@ router.put(
       const { id } = req.params;
       const { status } = req.body;
 
-      console.log("Updating order:");
-      console.log("Order ID:", id);
-      console.log("New Status:", status);
+
+      console.log(
+        "Updating order:"
+      );
+
+      console.log(
+        "Order ID:",
+        id
+      );
+
+      console.log(
+        "New Status:",
+        status
+      );
 
 
-      if (!mongoose.Types.ObjectId.isValid(id)) {
+      if (
+        !mongoose.Types.ObjectId.isValid(id)
+      ) {
         return res.status(400).json({
           message: "Invalid order ID",
         });
@@ -158,7 +308,9 @@ router.put(
       ];
 
 
-      if (!allowedStatuses.includes(status)) {
+      if (
+        !allowedStatuses.includes(status)
+      ) {
         return res.status(400).json({
           message: "Invalid order status",
         });
@@ -225,13 +377,16 @@ router.delete(
 
       const { id } = req.params;
 
+
       console.log(
         "Deleting order:",
         id
       );
 
 
-      if (!mongoose.Types.ObjectId.isValid(id)) {
+      if (
+        !mongoose.Types.ObjectId.isValid(id)
+      ) {
         return res.status(400).json({
           message: "Invalid order ID",
         });
@@ -255,7 +410,8 @@ router.delete(
 
 
       res.json({
-        message: "Order deleted successfully",
+        message:
+          "Order deleted successfully",
       });
 
     } catch (error) {
@@ -266,7 +422,8 @@ router.delete(
       );
 
       res.status(500).json({
-        message: "Failed to delete order",
+        message:
+          "Failed to delete order",
         error: error.message,
       });
     }
