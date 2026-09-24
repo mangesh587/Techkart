@@ -73,7 +73,7 @@ function Home() {
 
        <div className="hero-image">
   <img
-    src="/Images/IMG_20260924_162501.png"
+    src="/Techkart/Images/IMG_20260924_162501.png"
     alt="TechKart Electronics"
   />
 </div>
