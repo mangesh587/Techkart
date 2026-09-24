@@ -1,6 +1,8 @@
 const express = require("express");
 const mongoose = require("mongoose");
+
 const Order = require("../models/Order");
+const User = require("../models/User");
 
 const {
   protect,
@@ -9,9 +11,10 @@ const {
 
 const router = express.Router();
 
-// =========================
+
+// =====================================================
 // CREATE ORDER
-// =========================
+// =====================================================
 
 router.post("/", async (req, res) => {
   try {
@@ -23,6 +26,7 @@ router.post("/", async (req, res) => {
       message: "Order created successfully",
       order: savedOrder,
     });
+
   } catch (error) {
     console.error("CREATE ORDER ERROR:", error);
 
@@ -33,32 +37,49 @@ router.post("/", async (req, res) => {
   }
 });
 
-// =========================
+
+// =====================================================
 // GET MY ORDERS - CUSTOMER
-// =========================
+// =====================================================
 
 router.get(
   "/my-orders",
   protect,
   async (req, res) => {
     try {
-      const customerEmail = req.user.email;
 
-      if (!customerEmail) {
-        return res.status(400).json({
-          message: "Customer email not found in authentication token",
+      // Get logged-in user from JWT
+      const userId = req.user.id;
+
+      if (!userId) {
+        return res.status(401).json({
+          message: "User information not found",
         });
       }
 
+      // Find the actual user
+      const user = await User.findById(userId);
+
+      if (!user) {
+        return res.status(404).json({
+          message: "User not found",
+        });
+      }
+
+      // Find only this customer's orders
       const orders = await Order.find({
-        "customer.email": customerEmail,
+        "customer.email": user.email,
       }).sort({
         createdAt: -1,
       });
 
       res.json(orders);
+
     } catch (error) {
-      console.error("GET MY ORDERS ERROR:", error);
+      console.error(
+        "GET MY ORDERS ERROR:",
+        error
+      );
 
       res.status(500).json({
         message: "Failed to fetch your orders",
@@ -69,142 +90,188 @@ router.get(
 );
 
 
-// =========================
-// GET ALL ORDERS
-// =========================
+// =====================================================
+// GET ALL ORDERS - ADMIN
+// =====================================================
 
 router.get(
   "/",
   protect,
   adminOnly,
   async (req, res) => {
-  try {
-    const orders = await Order.find().sort({
-      createdAt: -1,
-    });
+    try {
 
-    res.json(orders);
-  } catch (error) {
-    console.error("GET ORDERS ERROR:", error);
+      const orders = await Order.find()
+        .sort({
+          createdAt: -1,
+        });
 
-    res.status(500).json({
-      message: "Failed to fetch orders",
-      error: error.message,
-    });
+      res.json(orders);
+
+    } catch (error) {
+      console.error(
+        "GET ORDERS ERROR:",
+        error
+      );
+
+      res.status(500).json({
+        message: "Failed to fetch orders",
+        error: error.message,
+      });
+    }
   }
-});
+);
 
-// =========================
-// UPDATE ORDER STATUS
-// =========================
+
+// =====================================================
+// UPDATE ORDER STATUS - ADMIN
+// =====================================================
 
 router.put(
   "/:id/status",
   protect,
   adminOnly,
   async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { status } = req.body;
+    try {
 
-    console.log("Updating order:");
-    console.log("Order ID:", id);
-    console.log("New Status:", status);
+      const { id } = req.params;
+      const { status } = req.body;
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({
-        message: "Invalid order ID",
-      });
-    }
+      console.log("Updating order:");
+      console.log("Order ID:", id);
+      console.log("New Status:", status);
 
-    const allowedStatuses = [
-      "Pending",
-      "Processing",
-      "Shipped",
-      "Delivered",
-      "Cancelled",
-    ];
 
-    if (!allowedStatuses.includes(status)) {
-      return res.status(400).json({
-        message: "Invalid order status",
-      });
-    }
+      if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({
+          message: "Invalid order ID",
+        });
+      }
 
-    const updatedOrder =
-      await Order.findByIdAndUpdate(
-        id,
-        { status: status },
-        {
-          new: true,
-          runValidators: true,
-        }
+
+      const allowedStatuses = [
+        "Pending",
+        "Processing",
+        "Shipped",
+        "Delivered",
+        "Cancelled",
+      ];
+
+
+      if (!allowedStatuses.includes(status)) {
+        return res.status(400).json({
+          message: "Invalid order status",
+        });
+      }
+
+
+      const updatedOrder =
+        await Order.findByIdAndUpdate(
+          id,
+          {
+            status: status,
+          },
+          {
+            new: true,
+            runValidators: true,
+          }
+        );
+
+
+      if (!updatedOrder) {
+        return res.status(404).json({
+          message: "Order not found",
+        });
+      }
+
+
+      console.log(
+        "Order status updated successfully"
       );
 
-    if (!updatedOrder) {
-      return res.status(404).json({
-        message: "Order not found",
+
+      res.json({
+        message:
+          "Order status updated successfully",
+        order: updatedOrder,
+      });
+
+    } catch (error) {
+
+      console.error(
+        "UPDATE STATUS ERROR:",
+        error
+      );
+
+      res.status(500).json({
+        message: "Failed to update order status",
+        error: error.message,
       });
     }
-
-    console.log("Order status updated successfully");
-
-    res.json({
-      message: "Order status updated successfully",
-      order: updatedOrder,
-    });
-  } catch (error) {
-    console.error("UPDATE STATUS ERROR:", error);
-
-    res.status(500).json({
-      message: "Failed to update order status",
-      error: error.message,
-    });
   }
-});
+);
 
-// =========================
-// DELETE ORDER
-// =========================
+
+// =====================================================
+// DELETE ORDER - ADMIN
+// =====================================================
 
 router.delete(
   "/:id",
   protect,
   adminOnly,
   async (req, res) => {
-  try {
-    const { id } = req.params;
+    try {
 
-    console.log("Deleting order:", id);
+      const { id } = req.params;
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({
-        message: "Invalid order ID",
+      console.log(
+        "Deleting order:",
+        id
+      );
+
+
+      if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({
+          message: "Invalid order ID",
+        });
+      }
+
+
+      const deletedOrder =
+        await Order.findByIdAndDelete(id);
+
+
+      if (!deletedOrder) {
+        return res.status(404).json({
+          message: "Order not found",
+        });
+      }
+
+
+      console.log(
+        "Order deleted successfully"
+      );
+
+
+      res.json({
+        message: "Order deleted successfully",
+      });
+
+    } catch (error) {
+
+      console.error(
+        "DELETE ORDER ERROR:",
+        error
+      );
+
+      res.status(500).json({
+        message: "Failed to delete order",
+        error: error.message,
       });
     }
-
-    const deletedOrder =
-      await Order.findByIdAndDelete(id);
-
-    if (!deletedOrder) {
-      return res.status(404).json({
-        message: "Order not found",
-      });
-    }
-
-    console.log("Order deleted successfully");
-
-    res.json({
-      message: "Order deleted successfully",
-    });
-  } catch (error) {
-    console.error("DELETE ORDER ERROR:", error);
-
-    res.status(500).json({
-      message: "Failed to delete order",
-      error: error.message,
-    });
   }
-});
+);
+
 
 module.exports = router;
