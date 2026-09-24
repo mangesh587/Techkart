@@ -24,11 +24,12 @@ function MyOrders() {
       }
 
       const response = await fetch(
-        "http://localhost:5000/api/orders/my-orders",
+        "https://techkart-backend1.onrender.com/api/orders/my-orders",
         {
           method: "GET",
           headers: {
             Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
           },
         }
       );
@@ -41,7 +42,15 @@ function MyOrders() {
         );
       }
 
-      setOrders(Array.isArray(data) ? data : []);
+      // Backend may return either an array
+      // or { orders: [...] }
+      if (Array.isArray(data)) {
+        setOrders(data);
+      } else if (Array.isArray(data.orders)) {
+        setOrders(data.orders);
+      } else {
+        setOrders([]);
+      }
 
     } catch (error) {
       console.error(
@@ -58,7 +67,6 @@ function MyOrders() {
     }
   };
 
-
   const getStatusClass = (status) => {
     switch (status) {
       case "Delivered":
@@ -73,11 +81,13 @@ function MyOrders() {
       case "Cancelled":
         return "status cancelled";
 
+      case "Pending":
+        return "status pending";
+
       default:
         return "status pending";
     }
   };
-
 
   if (loading) {
     return (
@@ -89,28 +99,27 @@ function MyOrders() {
     );
   }
 
-
   return (
     <div className="my-orders-page">
 
       <div className="orders-container">
 
         <div className="orders-header">
+
           <h1>My Orders</h1>
 
           <p>
             View and track all the orders
             you have placed.
           </p>
-        </div>
 
+        </div>
 
         {error && (
           <div className="orders-error">
             {error}
           </div>
         )}
-
 
         {!error && orders.length === 0 && (
           <div className="no-orders">
@@ -128,7 +137,6 @@ function MyOrders() {
           </div>
         )}
 
-
         {orders.length > 0 && (
           <div className="orders-list">
 
@@ -144,6 +152,7 @@ function MyOrders() {
                 <div className="order-top">
 
                   <div>
+
                     <span className="order-label">
                       Order ID
                     </span>
@@ -151,10 +160,11 @@ function MyOrders() {
                     <strong>
                       #{order._id}
                     </strong>
+
                   </div>
 
-
                   <div>
+
                     <span className="order-label">
                       Order Date
                     </span>
@@ -173,10 +183,11 @@ function MyOrders() {
                           )
                         : "N/A"}
                     </strong>
+
                   </div>
 
-
                   <div>
+
                     <span className="order-label">
                       Status
                     </span>
@@ -186,13 +197,12 @@ function MyOrders() {
                         order.status
                       )}
                     >
-                      {order.status ||
-                        "Pending"}
+                      {order.status || "Pending"}
                     </span>
+
                   </div>
 
                 </div>
-
 
                 {/* PRODUCTS */}
 
@@ -205,9 +215,7 @@ function MyOrders() {
 
                       <div
                         className="order-product"
-                        key={
-                          `${order._id}-${index}`
-                        }
+                        key={`${order._id}-${index}`}
                       >
 
                         <div className="product-image">
@@ -222,13 +230,11 @@ function MyOrders() {
                             />
                           ) : (
                             <span>
-                              {product.image ||
-                                "📱"}
+                              {product.image || "📱"}
                             </span>
                           )}
 
                         </div>
-
 
                         <div className="product-info">
 
@@ -253,7 +259,6 @@ function MyOrders() {
 
                         </div>
 
-
                         <div className="product-total">
 
                           ₹
@@ -277,7 +282,6 @@ function MyOrders() {
 
                 </div>
 
-
                 {/* ORDER BOTTOM */}
 
                 <div className="order-bottom">
@@ -294,7 +298,6 @@ function MyOrders() {
                     </strong>
 
                   </div>
-
 
                   <div className="order-total">
 
@@ -315,7 +318,6 @@ function MyOrders() {
 
                 </div>
 
-
                 {/* CUSTOMER DETAILS */}
 
                 <div className="customer-details">
@@ -328,6 +330,10 @@ function MyOrders() {
                     <strong>
                       {order.customer?.name}
                     </strong>
+                  </p>
+
+                  <p>
+                    {order.customer?.email}
                   </p>
 
                   <p>
