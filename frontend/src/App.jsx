@@ -12,6 +12,7 @@ import Checkout from "./pages/Checkout";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import AdminRoute from "./components/AdminRoute";
+import MyOrders from "./pages/MyOrders";
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
       <Navbar />
 
       <Routes>
+
         <Route
           path="/"
           element={<Home />}
@@ -45,6 +47,11 @@ function App() {
         />
 
         <Route
+          path="/my-orders"
+          element={<MyOrders />}
+        />
+
+        <Route
           path="/admin"
           element={
             <AdminRoute>
@@ -62,6 +69,7 @@ function App() {
           path="/register"
           element={<Register />}
         />
+
       </Routes>
     </BrowserRouter>
   );
