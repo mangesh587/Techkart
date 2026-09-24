@@ -34,6 +34,42 @@ router.post("/", async (req, res) => {
 });
 
 // =========================
+// GET MY ORDERS - CUSTOMER
+// =========================
+
+router.get(
+  "/my-orders",
+  protect,
+  async (req, res) => {
+    try {
+      const customerEmail = req.user.email;
+
+      if (!customerEmail) {
+        return res.status(400).json({
+          message: "Customer email not found in authentication token",
+        });
+      }
+
+      const orders = await Order.find({
+        "customer.email": customerEmail,
+      }).sort({
+        createdAt: -1,
+      });
+
+      res.json(orders);
+    } catch (error) {
+      console.error("GET MY ORDERS ERROR:", error);
+
+      res.status(500).json({
+        message: "Failed to fetch your orders",
+        error: error.message,
+      });
+    }
+  }
+);
+
+
+// =========================
 // GET ALL ORDERS
 // =========================
 
