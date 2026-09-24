@@ -1,5 +1,5 @@
-
 import { useEffect, useState } from "react";
+
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -9,6 +9,7 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
+
 import { Bar } from "react-chartjs-2";
 
 ChartJS.register(
@@ -28,7 +29,7 @@ function AdminDashboard() {
   const [showForm, setShowForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [selectedOrder, setSelectedOrder] = useState(null);
-  
+
   const [formData, setFormData] = useState({
     name: "",
     category: "Smartphones",
@@ -39,9 +40,9 @@ function AdminDashboard() {
     image: "📱",
   });
 
-  // =========================
+  // =====================================================
   // FETCH PRODUCTS
-  // =========================
+  // =====================================================
 
   const fetchProducts = async () => {
     try {
@@ -51,50 +52,72 @@ function AdminDashboard() {
 
       const data = await response.json();
 
+      if (!response.ok) {
+        throw new Error(
+          data.message || "Failed to fetch products"
+        );
+      }
+
       setProducts(Array.isArray(data) ? data : []);
-      setLoading(false);
     } catch (error) {
       console.error("Failed to fetch products:", error);
       setProducts([]);
+    } finally {
       setLoading(false);
     }
   };
 
-  // =========================
+  // =====================================================
   // FETCH ORDERS
-  // =========================
+  // =====================================================
 
   const fetchOrders = async () => {
-  try {
-    const token = localStorage.getItem("token");
+    try {
+      const token = localStorage.getItem("token");
 
-    const response = await fetch(
-      "https://techkart-backend1.onrender.com/api/orders",
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(
-        data.message || "Failed to fetch orders"
+      const response = await fetch(
+        "https://techkart-backend1.onrender.com/api/orders",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.message || "Failed to fetch orders"
+        );
+      }
+
+      setOrders(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error("Failed to fetch orders:", error);
+      setOrders([]);
     }
+  };
 
-    setOrders(Array.isArray(data) ? data : []);
-  } catch (error) {
-    console.error("Failed to fetch orders:", error);
-    setOrders([]);
-  }
-};
+  // =====================================================
+  // INITIAL LOAD + AUTO REFRESH
+  // =====================================================
 
-  // =========================
+  useEffect(() => {
+    fetchProducts();
+    fetchOrders();
+
+    const interval = setInterval(() => {
+      fetchProducts();
+      fetchOrders();
+    }, 10000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // =====================================================
   // FORM INPUT
-  // =========================
+  // =====================================================
 
   const handleInputChange = (event) => {
     const { name, value } = event.target;
@@ -105,9 +128,9 @@ function AdminDashboard() {
     });
   };
 
-  // =========================
+  // =====================================================
   // RESET FORM
-  // =========================
+  // =====================================================
 
   const resetForm = () => {
     setFormData({
@@ -124,12 +147,14 @@ function AdminDashboard() {
     setShowForm(false);
   };
 
-  // =========================
+  // =====================================================
   // ADD / UPDATE PRODUCT
-  // =========================
+  // =====================================================
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+
+    const token = localStorage.getItem("token");
 
     const productData = {
       ...formData,
@@ -143,11 +168,12 @@ function AdminDashboard() {
 
       if (editingProduct) {
         response = await fetch(
-        `https://techkart-backend1.onrender.com/api/products/${editingProduct._id}`,
+          `https://techkart-backend1.onrender.com/api/products/${editingProduct._id}`,
           {
             method: "PUT",
             headers: {
               "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
             },
             body: JSON.stringify(productData),
           }
@@ -159,14 +185,19 @@ function AdminDashboard() {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
             },
             body: JSON.stringify(productData),
           }
         );
       }
 
+      const data = await response.json();
+
       if (!response.ok) {
-        throw new Error("Request failed");
+        throw new Error(
+          data.message || "Product request failed"
+        );
       }
 
       alert(
@@ -176,16 +207,20 @@ function AdminDashboard() {
       );
 
       resetForm();
-      fetchProducts();
+
+      await fetchProducts();
     } catch (error) {
-      console.error(error);
-      alert("Something went wrong.");
+      console.error("Product error:", error);
+
+      alert(
+        `Something went wrong.\n\n${error.message}`
+      );
     }
   };
 
-  // =========================
+  // =====================================================
   // EDIT PRODUCT
-  // =========================
+  // =====================================================
 
   const handleEdit = (product) => {
     setEditingProduct(product);
@@ -208,9 +243,9 @@ function AdminDashboard() {
     });
   };
 
-  // =========================
+  // =====================================================
   // DELETE PRODUCT
-  // =========================
+  // =====================================================
 
   const handleDelete = async (id) => {
     const confirmDelete = window.confirm(
@@ -222,119 +257,141 @@ function AdminDashboard() {
     }
 
     try {
+      const token = localStorage.getItem("token");
+
       const response = await fetch(
         `https://techkart-backend1.onrender.com/api/products/${id}`,
         {
           method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
 
+      const data = await response.json();
+
       if (!response.ok) {
-        throw new Error("Delete failed");
+        throw new Error(
+          data.message || "Delete failed"
+        );
       }
 
       alert("Product deleted successfully!");
 
-      fetchProducts();
+      await fetchProducts();
     } catch (error) {
-      console.error(error);
-      alert("Failed to delete product.");
+      console.error("Delete product error:", error);
+
+      alert(
+        `Failed to delete product.\n\n${error.message}`
+      );
     }
   };
 
-  // =========================
+  // =====================================================
   // UPDATE ORDER STATUS
-  // =========================
+  // =====================================================
 
-const updateOrderStatus = async (orderId, status) => {
-  try {
-    const token = localStorage.getItem("token");
+  const updateOrderStatus = async (orderId, status) => {
+    try {
+      const token = localStorage.getItem("token");
 
-    const response = await fetch(
-      `https://techkart-backend1.onrender.com/api/orders/${orderId}/status`,
-      {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          status: status,
-        }),
+      const response = await fetch(
+        `https://techkart-backend1.onrender.com/api/orders/${orderId}/status`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            status: status,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      console.log("Status response:", data);
+
+      if (!response.ok) {
+        throw new Error(
+          data.message ||
+            "Failed to update order status"
+        );
       }
-    );
 
-    const data = await response.json();
+      alert("Order status updated successfully!");
 
-    console.log("Status response:", data);
+      await fetchOrders();
+    } catch (error) {
+      console.error(
+        "Status update error:",
+        error
+      );
 
-    if (!response.ok) {
-      throw new Error(
-        data.message || "Failed to update order status"
+      alert(
+        `Failed to update order status.\n\n${error.message}`
       );
     }
+  };
 
-    alert("Order status updated successfully!");
-
-    await fetchOrders();
-  } catch (error) {
-    console.error("Status update error:", error);
-
-    alert(
-      `Failed to update order status.\n\n${error.message}`
-    );
-  }
-};
-  // =========================
+  // =====================================================
   // DELETE ORDER
-  // =========================
+  // =====================================================
 
- const deleteOrder = async (orderId) => {
-  const confirmDelete = window.confirm(
-    "Are you sure you want to delete this order?"
-  );
-
-  if (!confirmDelete) {
-    return;
-  }
-
-  try {
-    const token = localStorage.getItem("token");
-
-    const response = await fetch(
-      `https://techkart-backend1.onrender.com/api/orders/${orderId}`,
-      {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
+  const deleteOrder = async (orderId) => {
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this order?"
     );
 
-    const data = await response.json();
-
-    console.log("Delete response:", data);
-
-    if (!response.ok) {
-      throw new Error(
-        data.message || "Failed to delete order"
-      );
+    if (!confirmDelete) {
+      return;
     }
 
-    alert("Order deleted successfully!");
+    try {
+      const token = localStorage.getItem("token");
 
-    await fetchOrders();
-  } catch (error) {
-    console.error("Delete order error:", error);
+      const response = await fetch(
+        `https://techkart-backend1.onrender.com/api/orders/${orderId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
-    alert(
-      `Failed to delete order.\n\n${error.message}`
-    );
-  }
-};
-  // =========================
+      const data = await response.json();
+
+      console.log("Delete response:", data);
+
+      if (!response.ok) {
+        throw new Error(
+          data.message ||
+            "Failed to delete order"
+        );
+      }
+
+      alert("Order deleted successfully!");
+
+      await fetchOrders();
+    } catch (error) {
+      console.error(
+        "Delete order error:",
+        error
+      );
+
+      alert(
+        `Failed to delete order.\n\n${error.message}`
+      );
+    }
+  };
+
+  // =====================================================
   // LOADING
-  // =========================
+  // =====================================================
 
   if (loading) {
     return (
@@ -344,9 +401,9 @@ const updateOrderStatus = async (orderId, status) => {
     );
   }
 
-  // =========================
+  // =====================================================
   // PRODUCT ANALYTICS
-  // =========================
+  // =====================================================
 
   const totalProducts = products.length;
 
@@ -375,9 +432,9 @@ const updateOrderStatus = async (orderId, status) => {
     ),
   ];
 
-  // =========================
+  // =====================================================
   // ORDER ANALYTICS
-  // =========================
+  // =====================================================
 
   const totalOrders = orders.length;
 
@@ -388,16 +445,18 @@ const updateOrderStatus = async (orderId, status) => {
   );
 
   const pendingOrders = orders.filter(
-    (order) => order.status === "Pending"
+    (order) =>
+      order.status === "Pending"
   ).length;
 
   const deliveredOrders = orders.filter(
-    (order) => order.status === "Delivered"
+    (order) =>
+      order.status === "Delivered"
   ).length;
 
-  // =========================
+  // =====================================================
   // CATEGORY ANALYTICS
-  // =========================
+  // =====================================================
 
   const categoryCounts = categories.map(
     (category) =>
@@ -416,17 +475,19 @@ const updateOrderStatus = async (orderId, status) => {
         )
         .reduce(
           (sum, product) =>
-            sum + Number(product.stock || 0),
+            sum +
+            Number(product.stock || 0),
           0
         )
   );
 
-  // =========================
+  // =====================================================
   // PRODUCT CHART
-  // =========================
+  // =====================================================
 
   const productChartData = {
     labels: categories,
+
     datasets: [
       {
         label: "Number of Products",
@@ -435,12 +496,13 @@ const updateOrderStatus = async (orderId, status) => {
     ],
   };
 
-  // =========================
+  // =====================================================
   // STOCK CHART
-  // =========================
+  // =====================================================
 
   const stockChartData = {
     labels: categories,
+
     datasets: [
       {
         label: "Available Stock",
@@ -449,70 +511,111 @@ const updateOrderStatus = async (orderId, status) => {
     ],
   };
 
+  // =====================================================
+  // RETURN
+  // =====================================================
+
   return (
     <div className="admin-page">
 
-      {/* =========================
+      {/* =================================================
           HEADER
-      ========================= */}
+      ================================================= */}
 
       <section className="admin-header">
+
         <div>
-          <h1>Admin Dashboard</h1>
+
+          <h1>
+            Admin Dashboard
+          </h1>
 
           <p>
             Manage products and monitor
             TechKart analytics.
           </p>
+
         </div>
+
       </section>
 
-      {/* =========================
+      {/* =================================================
           STATISTICS
-      ========================= */}
+      ================================================= */}
 
       <section className="admin-stats">
 
         <div className="admin-stat-card">
+
           <div className="admin-stat-icon">
             📦
           </div>
 
           <div>
-            <p>Total Products</p>
-            <h2>{totalProducts}</h2>
+
+            <p>
+              Total Products
+            </p>
+
+            <h2>
+              {totalProducts}
+            </h2>
+
           </div>
+
         </div>
 
         <div className="admin-stat-card">
+
           <div className="admin-stat-icon">
             📊
           </div>
 
           <div>
-            <p>Total Stock</p>
-            <h2>{totalStock}</h2>
+
+            <p>
+              Total Stock
+            </p>
+
+            <h2>
+              {totalStock}
+            </h2>
+
           </div>
+
         </div>
 
         <div className="admin-stat-card">
+
           <div className="admin-stat-icon">
             🛍️
           </div>
 
           <div>
-            <p>Total Orders</p>
-            <h2>{totalOrders}</h2>
+
+            <p>
+              Total Orders
+            </p>
+
+            <h2>
+              {totalOrders}
+            </h2>
+
           </div>
+
         </div>
 
         <div className="admin-stat-card">
+
           <div className="admin-stat-icon">
             💰
           </div>
 
           <div>
-            <p>Total Revenue</p>
+
+            <p>
+              Total Revenue
+            </p>
 
             <h2>
               ₹
@@ -520,63 +623,104 @@ const updateOrderStatus = async (orderId, status) => {
                 "en-IN"
               )}
             </h2>
+
           </div>
+
         </div>
 
         <div className="admin-stat-card">
+
           <div className="admin-stat-icon">
             ⏳
           </div>
 
           <div>
-            <p>Pending Orders</p>
-            <h2>{pendingOrders}</h2>
+
+            <p>
+              Pending Orders
+            </p>
+
+            <h2>
+              {pendingOrders}
+            </h2>
+
           </div>
+
         </div>
 
         <div className="admin-stat-card">
+
           <div className="admin-stat-icon">
             ✅
           </div>
 
           <div>
-            <p>Delivered Orders</p>
-            <h2>{deliveredOrders}</h2>
+
+            <p>
+              Delivered Orders
+            </p>
+
+            <h2>
+              {deliveredOrders}
+            </h2>
+
           </div>
+
         </div>
 
         <div className="admin-stat-card">
+
           <div className="admin-stat-icon">
             ⭐
           </div>
 
           <div>
-            <p>Average Rating</p>
-            <h2>{averageRating}</h2>
+
+            <p>
+              Average Rating
+            </p>
+
+            <h2>
+              {averageRating}
+            </h2>
+
           </div>
+
         </div>
 
         <div className="admin-stat-card">
+
           <div className="admin-stat-icon">
             🏷️
           </div>
 
           <div>
-            <p>Categories</p>
-            <h2>{categories.length}</h2>
+
+            <p>
+              Categories
+            </p>
+
+            <h2>
+              {categories.length}
+            </h2>
+
           </div>
+
         </div>
 
       </section>
 
-      {/* =========================
+      {/* =================================================
           CHARTS
-      ========================= */}
+      ================================================= */}
 
       <section className="admin-charts">
 
         <div className="chart-card">
-          <h2>Products by Category</h2>
+
+          <h2>
+            Products by Category
+          </h2>
 
           <Bar
             data={productChartData}
@@ -590,10 +734,14 @@ const updateOrderStatus = async (orderId, status) => {
               },
             }}
           />
+
         </div>
 
         <div className="chart-card">
-          <h2>Stock by Category</h2>
+
+          <h2>
+            Stock by Category
+          </h2>
 
           <Bar
             data={stockChartData}
@@ -607,23 +755,27 @@ const updateOrderStatus = async (orderId, status) => {
               },
             }}
           />
+
         </div>
 
       </section>
 
-      {/* =========================
+      {/* =================================================
           PRODUCT FORM
-      ========================= */}
+      ================================================= */}
 
       {showForm && (
+
         <section className="admin-form-section">
 
           <div className="admin-form-header">
 
             <h2>
+
               {editingProduct
                 ? "Edit Product"
                 : "Add New Product"}
+
             </h2>
 
             <button
@@ -641,7 +793,10 @@ const updateOrderStatus = async (orderId, status) => {
           >
 
             <div className="form-group">
-              <label>Product Name</label>
+
+              <label>
+                Product Name
+              </label>
 
               <input
                 type="text"
@@ -651,25 +806,46 @@ const updateOrderStatus = async (orderId, status) => {
                 placeholder="Enter product name"
                 required
               />
+
             </div>
 
             <div className="form-group">
-              <label>Category</label>
+
+              <label>
+                Category
+              </label>
 
               <select
                 name="category"
                 value={formData.category}
                 onChange={handleInputChange}
               >
-                <option>Smartphones</option>
-                <option>Laptops</option>
-                <option>Audio</option>
-                <option>Smartwatches</option>
+
+                <option>
+                  Smartphones
+                </option>
+
+                <option>
+                  Laptops
+                </option>
+
+                <option>
+                  Audio
+                </option>
+
+                <option>
+                  Smartwatches
+                </option>
+
               </select>
+
             </div>
 
             <div className="form-group">
-              <label>Price</label>
+
+              <label>
+                Price
+              </label>
 
               <input
                 type="number"
@@ -679,10 +855,14 @@ const updateOrderStatus = async (orderId, status) => {
                 placeholder="Enter price"
                 required
               />
+
             </div>
 
             <div className="form-group">
-              <label>Rating</label>
+
+              <label>
+                Rating
+              </label>
 
               <input
                 type="number"
@@ -695,10 +875,14 @@ const updateOrderStatus = async (orderId, status) => {
                 step="0.1"
                 required
               />
+
             </div>
 
             <div className="form-group">
-              <label>Stock</label>
+
+              <label>
+                Stock
+              </label>
 
               <input
                 type="number"
@@ -709,22 +893,30 @@ const updateOrderStatus = async (orderId, status) => {
                 min="0"
                 required
               />
+
             </div>
 
             <div className="form-group">
-              <label>Image / Icon</label>
+
+              <label>
+                Image / Icon
+              </label>
 
               <input
                 type="text"
                 name="image"
                 value={formData.image}
                 onChange={handleInputChange}
-                placeholder="Example: 📱"
+                placeholder="Example: 📱 or image URL"
               />
+
             </div>
 
             <div className="form-group form-full">
-              <label>Description</label>
+
+              <label>
+                Description
+              </label>
 
               <textarea
                 name="description"
@@ -734,6 +926,7 @@ const updateOrderStatus = async (orderId, status) => {
                 rows="4"
                 required
               />
+
             </div>
 
             <div className="form-actions">
@@ -742,9 +935,11 @@ const updateOrderStatus = async (orderId, status) => {
                 type="submit"
                 className="save-product-btn"
               >
+
                 {editingProduct
                   ? "Update Product"
                   : "Add Product"}
+
               </button>
 
               <button
@@ -758,18 +953,22 @@ const updateOrderStatus = async (orderId, status) => {
             </div>
 
           </form>
+
         </section>
+
       )}
 
-      {/* =========================
+      {/* =================================================
           PRODUCT MANAGEMENT
-      ========================= */}
+      ================================================= */}
 
       <section className="admin-products">
 
         <div className="admin-products-header">
 
-          <h2>Product Management</h2>
+          <h2>
+            Product Management
+          </h2>
 
           <button
             className="add-product-btn"
@@ -788,91 +987,136 @@ const updateOrderStatus = async (orderId, status) => {
           <table className="admin-table">
 
             <thead>
+
               <tr>
-                <th>Product</th>
-                <th>Category</th>
-                <th>Price</th>
-                <th>Rating</th>
-                <th>Stock</th>
-                <th>Actions</th>
+
+                <th>
+                  Product
+                </th>
+
+                <th>
+                  Category
+                </th>
+
+                <th>
+                  Price
+                </th>
+
+                <th>
+                  Rating
+                </th>
+
+                <th>
+                  Stock
+                </th>
+
+                <th>
+                  Actions
+                </th>
+
               </tr>
+
             </thead>
 
             <tbody>
 
-              {products.map((product) => (
+              {products.map(
+                (product) => (
 
-                <tr key={product._id}>
+                  <tr
+                    key={product._id}
+                  >
 
-                  <td>
-                    <span className="admin-product-image">
+                    <td>
 
-                      {product.image?.startsWith(
-                        "http"
-                      ) ? (
-                        <img
-                          src={product.image}
-                          alt={product.name}
-                        />
-                      ) : (
-                        product.image || "📦"
+                      <span className="admin-product-image">
+
+                        {product.image?.startsWith(
+                          "http"
+                        ) ? (
+
+                          <img
+                            src={product.image}
+                            alt={product.name}
+                          />
+
+                        ) : (
+
+                          product.image ||
+                          "📦"
+
+                        )}
+
+                      </span>
+
+                      {product.name}
+
+                    </td>
+
+                    <td>
+                      {product.category}
+                    </td>
+
+                    <td>
+
+                      ₹
+                      {Number(
+                        product.price || 0
+                      ).toLocaleString(
+                        "en-IN"
                       )}
 
-                    </span>
+                    </td>
 
-                    {product.name}
-                  </td>
+                    <td>
 
-                  <td>
-                    {product.category}
-                  </td>
+                      ⭐{" "}
+                      {product.rating ||
+                        0}
 
-                  <td>
-                    ₹
-                    {Number(
-                      product.price || 0
-                    ).toLocaleString("en-IN")}
-                  </td>
+                    </td>
 
-                  <td>
-                    ⭐ {product.rating || 0}
-                  </td>
+                    <td>
 
-                  <td>
-                    {product.stock || 0}
-                  </td>
+                      {product.stock ||
+                        0}
 
-                  <td>
+                    </td>
 
-                    <div className="admin-actions">
+                    <td>
 
-                      <button
-                        className="edit-btn"
-                        onClick={() =>
-                          handleEdit(product)
-                        }
-                      >
-                        Edit
-                      </button>
+                      <div className="admin-actions">
 
-                      <button
-                        className="delete-btn"
-                        onClick={() =>
-                          handleDelete(
-                            product._id
-                          )
-                        }
-                      >
-                        Delete
-                      </button>
+                        <button
+                          className="edit-btn"
+                          onClick={() =>
+                            handleEdit(
+                              product
+                            )
+                          }
+                        >
+                          Edit
+                        </button>
 
-                    </div>
+                        <button
+                          className="delete-btn"
+                          onClick={() =>
+                            handleDelete(
+                              product._id
+                            )
+                          }
+                        >
+                          Delete
+                        </button>
 
-                  </td>
+                      </div>
 
-                </tr>
+                    </td>
 
-              ))}
+                  </tr>
+
+                )
+              )}
 
             </tbody>
 
@@ -882,15 +1126,17 @@ const updateOrderStatus = async (orderId, status) => {
 
       </section>
 
-      {/* =========================
+      {/* =================================================
           ORDER MANAGEMENT
-      ========================= */}
+      ================================================= */}
 
       <section className="admin-orders">
 
         <div className="admin-products-header">
 
-          <h2>Order Management</h2>
+          <h2>
+            Order Management
+          </h2>
 
           <span className="order-count">
             {orders.length} Orders
@@ -902,9 +1148,13 @@ const updateOrderStatus = async (orderId, status) => {
 
           <div className="no-orders">
 
-            <div>🛍️</div>
+            <div>
+              🛍️
+            </div>
 
-            <h3>No Orders Yet</h3>
+            <h3>
+              No Orders Yet
+            </h3>
 
             <p>
               Orders placed by customers
@@ -915,316 +1165,437 @@ const updateOrderStatus = async (orderId, status) => {
 
         ) : (
 
-          <div className="orders-table-container">
+          <div className="admin-table-container">
 
             <table className="admin-table">
 
               <thead>
 
                 <tr>
-                  <th>Order ID</th>
-                  <th>Customer</th>
-                  <th>Items</th>
-                  <th>Total</th>
-                  <th>Payment</th>
-                  <th>Status</th>
-                  <th>Date</th>
-                  <th>Action</th>
+
+                  <th>
+                    Order ID
+                  </th>
+
+                  <th>
+                    Customer
+                  </th>
+
+                  <th>
+                    Products
+                  </th>
+
+                  <th>
+                    Total
+                  </th>
+
+                  <th>
+                    Payment
+                  </th>
+
+                  <th>
+                    Status
+                  </th>
+
+                  <th>
+                    Actions
+                  </th>
+
                 </tr>
 
               </thead>
 
               <tbody>
 
-                {orders.map((order) => (
+                {orders.map(
+                  (order) => (
 
-                  <tr key={order._id}>
+                    <tr
+                      key={order._id}
+                    >
 
-                    <td>
-                      #
-                      {order._id
-                        .slice(-6)
-                        .toUpperCase()}
-                    </td>
+                      {/* ORDER ID */}
 
-                    <td>
+                      <td>
 
-                      <strong>
-                        {order.customer?.name ||
+                        #
+                        {order._id
+                          ?.slice(-6)
+                          .toUpperCase()}
+
+                      </td>
+
+                      {/* CUSTOMER */}
+
+                      <td>
+
+                        <strong>
+                          {order.customer
+                            ?.name ||
+                            "N/A"}
+                        </strong>
+
+                        <br />
+
+                        <small>
+                          {order.customer
+                            ?.email ||
+                            ""}
+                        </small>
+
+                      </td>
+
+                      {/* PRODUCTS */}
+
+                      <td>
+
+                        {Array.isArray(
+                          order.products
+                        )
+                          ? order.products.map(
+                              (
+                                product,
+                                index
+                              ) => (
+
+                                <div
+                                  key={
+                                    index
+                                  }
+                                  className="order-product"
+                                >
+
+                                  <span>
+                                    {product.image ||
+                                      "📦"}
+                                  </span>
+
+                                  <span>
+                                    {
+                                      product.name
+                                    }{" "}
+                                    ×{" "}
+                                    {
+                                      product.quantity
+                                    }
+                                  </span>
+
+                                </div>
+
+                              )
+                            )
+                          : "No products"}
+
+                      </td>
+
+                      {/* TOTAL */}
+
+                      <td>
+
+                        <strong>
+
+                          ₹
+                          {Number(
+                            order.totalAmount ||
+                              0
+                          ).toLocaleString(
+                            "en-IN"
+                          )}
+
+                        </strong>
+
+                      </td>
+
+                      {/* PAYMENT */}
+
+                      <td>
+
+                        {order.paymentMethod
+                          ?.toUpperCase() ||
                           "N/A"}
-                      </strong>
 
-                      <br />
+                      </td>
 
-                      <small>
-                        {order.customer?.email ||
-                          "N/A"}
-                      </small>
+                      {/* STATUS */}
 
-                    </td>
+                      <td>
 
-                    {/* FIX:
-                        order.items → order.products
-                    */}
-
-                    <td>
-                      {(order.products || []).reduce(
-                        (sum, item) =>
-                          sum +
-                          Number(
-                            item.quantity || 0
-                          ),
-                        0
-                      )}
-                    </td>
-
-                    <td>
-                      ₹
-                      {Number(
-                        order.totalAmount || 0
-                      ).toLocaleString("en-IN")}
-                    </td>
-
-                    <td>
-                      {order.paymentMethod
-                        ? order.paymentMethod.toUpperCase()
-                        : "N/A"}
-                    </td>
-
-                    <td>
-
-                      <select
-                        className={`order-status ${
-                          (
+                        <select
+                          value={
                             order.status ||
                             "Pending"
-                          ).toLowerCase()
-                        }`}
-                        value={
-                          order.status ||
-                          "Pending"
+                          }
+                          onChange={(
+                            event
+                          ) =>
+                            updateOrderStatus(
+                              order._id,
+                              event.target
+                                .value
+                            )
+                          }
+                          className="order-status-select"
+                        >
+
+                          <option value="Pending">
+                            Pending
+                          </option>
+
+                          <option value="Processing">
+                            Processing
+                          </option>
+
+                          <option value="Shipped">
+                            Shipped
+                          </option>
+
+                          <option value="Delivered">
+                            Delivered
+                          </option>
+
+                          <option value="Cancelled">
+                            Cancelled
+                          </option>
+
+                        </select>
+
+                      </td>
+
+                      {/* ACTIONS */}
+
+                      <td>
+
+                        <div className="admin-actions">
+
+                          <button
+                            className="edit-btn"
+                            onClick={() =>
+                              setSelectedOrder(
+                                order
+                              )
+                            }
+                          >
+                            View
+                          </button>
+
+                          <button
+                            className="delete-btn"
+                            onClick={() =>
+                              deleteOrder(
+                                order._id
+                              )
+                            }
+                          >
+                            Delete
+                          </button>
+
+                        </div>
+
+                      </td>
+
+                    </tr>
+
+                  )
+                )}
+
+              </tbody>
+
+            </table>
+
+          </div>
+
+        )}
+
+      </section>
+
+      {/* =================================================
+          ORDER DETAILS MODAL
+      ================================================= */}
+
+      {selectedOrder && (
+
+        <div className="order-modal-overlay">
+
+          <div className="order-modal">
+
+            <div className="order-modal-header">
+
+              <h2>
+                Order Details
+              </h2>
+
+              <button
+                className="close-form-btn"
+                onClick={() =>
+                  setSelectedOrder(
+                    null
+                  )
+                }
+              >
+                ✕
+              </button>
+
+            </div>
+
+            <div className="order-details">
+
+              <p>
+                <strong>
+                  Order ID:
+                </strong>{" "}
+                {selectedOrder._id}
+              </p>
+
+              <p>
+                <strong>
+                  Customer:
+                </strong>{" "}
+                {
+                  selectedOrder
+                    .customer?.name
+                }
+              </p>
+
+              <p>
+                <strong>
+                  Email:
+                </strong>{" "}
+                {
+                  selectedOrder
+                    .customer?.email
+                }
+              </p>
+
+              <p>
+                <strong>
+                  Phone:
+                </strong>{" "}
+                {
+                  selectedOrder
+                    .customer?.phone
+                }
+              </p>
+
+              <p>
+                <strong>
+                  Address:
+                </strong>{" "}
+                {
+                  selectedOrder
+                    .customer?.address
+                }
+                ,{" "}
+                {
+                  selectedOrder
+                    .customer?.city
+                }
+                ,{" "}
+                {
+                  selectedOrder
+                    .customer?.pincode
+                }
+              </p>
+
+              <p>
+                <strong>
+                  Payment:
+                </strong>{" "}
+                {selectedOrder
+                  .paymentMethod
+                  ?.toUpperCase()}
+              </p>
+
+              <p>
+                <strong>
+                  Status:
+                </strong>{" "}
+                {
+                  selectedOrder.status
+                }
+              </p>
+
+              <h3>
+                Products
+              </h3>
+
+              {Array.isArray(
+                selectedOrder.products
+              ) &&
+                selectedOrder.products.map(
+                  (
+                    product,
+                    index
+                  ) => (
+
+                    <div
+                      key={index}
+                      className="order-detail-product"
+                    >
+
+                      <span>
+                        {product.image ||
+                          "📦"}
+                      </span>
+
+                      <span>
+                        {
+                          product.name
                         }
-                        onChange={(event) =>
-                          updateOrderStatus(
-                            order._id,
-                            event.target.value
-                          )
+                      </span>
+
+                      <span>
+                        ×{" "}
+                        {
+                          product.quantity
                         }
-                      >
+                      </span>
 
-                        <option>
-                          Pending
-                        </option>
+                      <span>
 
-                        <option>
-                          Processing
-                        </option>
+                        ₹
+                        {Number(
+                          product.price ||
+                            0
+                        ).toLocaleString(
+                          "en-IN"
+                        )}
 
-                        <option>
-                          Shipped
-                        </option>
+                      </span>
 
-                        <option>
-                          Delivered
-                        </option>
+                    </div>
 
-                        <option>
-                          Cancelled
-                        </option>
+                  )
+                )}
 
-                      </select>
+              <div className="order-detail-total">
 
-                    </td>
+                <strong>
+                  Total Amount:
+                </strong>
 
-                    <td>
-                      {order.createdAt
-                        ? new Date(
-                            order.createdAt
-                          ).toLocaleDateString(
-                            "en-IN"
-                          )
-                        : "N/A"}
-                    </td>
-    <td>
-      <div className="admin-actions">
+                <strong>
 
-        <button
-          className="view-order-btn"
-          onClick={() =>
-            setSelectedOrder(order)
-          }
-        >
-          View
-        </button>
+                  ₹
+                  {Number(
+                    selectedOrder.totalAmount ||
+                      0
+                  ).toLocaleString(
+                    "en-IN"
+                  )}
 
-        <button
-          className="delete-btn"
-          onClick={() =>
-            deleteOrder(order._id)
-          }
-        >
-          Delete
-        </button>
-
-      </div>
-    </td>
-
-                      </tr>
-
-                    ))}
-
-                  </tbody>
-
-                </table>
+                </strong>
 
               </div>
 
-            )}
-
-          </section>
-
-       {selectedOrder && (
-      <div className="order-modal-overlay">
-
-        <div className="order-modal">
-
-          <div className="order-modal-header">
-
-            <div>
-              <h2>Order Details</h2>
-
-              <p>
-                #
-                {selectedOrder._id
-                  .slice(-6)
-                  .toUpperCase()}
-              </p>
             </div>
-
-            <button
-              className="order-modal-close"
-              onClick={() =>
-                setSelectedOrder(null)
-              }
-            >
-              ✕
-            </button>
-
-          </div>
-
-          <div className="order-customer-details">
-
-            <h3>Customer Information</h3>
-
-            <p>
-              <strong>Name:</strong>{" "}
-              {selectedOrder.customer?.name}
-            </p>
-
-            <p>
-              <strong>Email:</strong>{" "}
-              {selectedOrder.customer?.email}
-            </p>
-
-            <p>
-              <strong>Phone:</strong>{" "}
-              {selectedOrder.customer?.phone}
-            </p>
-
-            <p>
-              <strong>Address:</strong>{" "}
-              {selectedOrder.customer?.address}
-            </p>
-
-            <p>
-              <strong>City:</strong>{" "}
-              {selectedOrder.customer?.city}
-            </p>
-
-            <p>
-              <strong>Pincode:</strong>{" "}
-              {selectedOrder.customer?.pincode}
-            </p>
-
-          </div>
-
-          <div className="order-products-details">
-
-            <h3>Products</h3>
-
-            {(selectedOrder.products || []).map(
-              (item, index) => (
-                <div
-                  className="order-detail-product"
-                  key={index}
-                >
-
-                  <div>
-                    <strong>
-                      {item.name}
-                    </strong>
-
-                    <p>
-                      ₹
-                      {Number(
-                        item.price
-                      ).toLocaleString("en-IN")}
-                      {" × "}
-                      {item.quantity}
-                    </p>
-                  </div>
-
-                  <strong>
-                    ₹
-                    {(
-                      Number(item.price) *
-                      Number(item.quantity)
-                    ).toLocaleString("en-IN")}
-                  </strong>
-
-                </div>
-              )
-            )}
-
-          </div>
-
-          <div className="order-detail-summary">
-
-            <p>
-              <span>Payment</span>
-
-              <strong>
-                {selectedOrder.paymentMethod?.toUpperCase()}
-              </strong>
-            </p>
-
-            <p>
-              <span>Status</span>
-
-              <strong>
-                {selectedOrder.status || "Pending"}
-              </strong>
-            </p>
-
-            <p className="order-grand-total">
-              <span>Total</span>
-
-              <strong>
-                ₹
-                {Number(
-                  selectedOrder.totalAmount || 0
-                ).toLocaleString("en-IN")}
-              </strong>
-            </p>
 
           </div>
 
         </div>
 
-      </div>
-    )}
+      )}
 
-  </div>
+    </div>
   );
 }
 
